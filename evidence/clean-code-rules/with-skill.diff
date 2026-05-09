@@ -1,0 +1,144 @@
+diff --git a/utils.py b/utils.py
+index 42efa2b..7875566 100644
+--- a/utils.py
++++ b/utils.py
+@@ -1,67 +1,94 @@
+-"""Utility functions - long functions, magic numbers, poor naming."""
++"""Clean utility functions with meaningful names and no magic numbers."""
+ 
+ import time
+ 
++# --- Named Constants ---
++SCALING_FACTOR = 0.75
++SECONDS_PER_DAY = 86400
++DECAY_RATE = 0.01
++PI_APPROXIMATION = 3.14159
++
++OVERFLOW_THRESHOLD = 100
++OVERFLOW_MULTIPLIER = 1.5
+ 
+-def do_stuff(input_data, mode, x):
+-    """This function does too many things and is poorly named."""
+-    tmp = []
+-    result = 0
+-    count = 0
+ 
+-    # Part 1: filter valid numbers
+-    for item in input_data:
++def extract_positive_numbers(data):
++    """Extract positive numeric values from a mixed list of numbers and strings."""
++    numbers = []
++    for item in data:
+         if isinstance(item, (int, float)):
+             if item > 0:
+-                tmp.append(item)
++                numbers.append(item)
+         elif isinstance(item, str):
+             try:
+-                val = float(item)
+-                if val > 0:
+-                    tmp.append(val)
++                parsed = float(item)
++                if parsed > 0:
++                    numbers.append(parsed)
+             except ValueError:
+                 pass
++    return numbers
+ 
+-    # Part 2: transform based on mode
+-    if mode == "scale":
+-        for i in range(len(tmp)):
+-            tmp[i] = tmp[i] * 0.75  # MAGIC NUMBER
+-    elif mode == "normalize":
+-        max_val = max(tmp)
+-        for i in range(len(tmp)):
+-            tmp[i] = tmp[i] / max_val
+-    elif mode == "threshold":
+-        for i in range(len(tmp)):
+-            if tmp[i] > x:
+-                result += tmp[i]
+-                count += 1
+-        return result / count if count > 0 else 0
+ 
+-    # Part 3: compute stats (duplicated logic from threshold mode)
+-    for val in tmp:
+-        result += val
+-        count += 1
++def scale_numbers(numbers):
++    """Multiply each number by the standard scaling factor."""
++    return [n * SCALING_FACTOR for n in numbers]
++
++
++def normalize_numbers(numbers):
++    """Divide each number by the maximum value in the list."""
++    max_value = max(numbers)
++    return [n / max_value for n in numbers]
++
++
++def threshold_average(numbers, threshold):
++    """Return the average of numbers that exceed the given threshold."""
++    above_threshold = [n for n in numbers if n > threshold]
++    if not above_threshold:
++        return 0
++    return sum(above_threshold) / len(above_threshold)
++
+ 
+-    avg = result / count if count > 0 else 0
++def mean(numbers):
++    """Arithmetic mean of a list. Returns 0 for empty input."""
++    if not numbers:
++        return 0
++    return sum(numbers) / len(numbers)
+ 
+-    # Part 4: apply time-based decay (duplicated transform pattern)
+-    current_time = time.time()
+-    decay_factor = current_time / 86400  # MAGIC NUMBER: seconds per day
+ 
+-    for i in range(len(tmp)):
+-        tmp[i] = tmp[i] * (1 - decay_factor * 0.01)
++def apply_time_decay(numbers):
++    """Apply a time-dependent decay factor to each number."""
++    decay_factor = time.time() / SECONDS_PER_DAY
++    return [n * (1 - decay_factor * DECAY_RATE) for n in numbers]
+ 
+-    final_result = sum(tmp) / len(tmp) if len(tmp) > 0 else 0
+ 
+-    # Part 5: format output (duplicated magic number)
++def format_output(value, mode):
++    """Format the final value according to processing mode."""
+     if mode == "scale":
+-        return round(final_result, 2)
+-    return round(final_result * 3.14159, 4)  # MAGIC NUMBER: pi approximation
++        return round(value, 2)
++    return round(value * PI_APPROXIMATION, 4)
++
++
++def do_stuff(input_data, mode, x):
++    """Process input data: filter positives, transform, apply decay, and return average."""
++    numbers = extract_positive_numbers(input_data)
++
++    if mode == "threshold":
++        return threshold_average(numbers, x)
++
++    if mode == "scale":
++        numbers = scale_numbers(numbers)
++    elif mode == "normalize":
++        numbers = normalize_numbers(numbers)
++
++    numbers = apply_time_decay(numbers)
++    final_result = mean(numbers)
++
++    return format_output(final_result, mode)
+ 
+ 
+ def old_func(a, b, c):
+-    """Legacy function with terrible naming."""
+-    x = a + b
+-    if x > 100:  # MAGIC NUMBER
+-        x = x * 1.5  # MAGIC NUMBER
+-    return x - c
++    """Legacy calculation with overflow adjustment."""
++    base = a + b
++    if base > OVERFLOW_THRESHOLD:
++        base = base * OVERFLOW_MULTIPLIER
++    return base - c

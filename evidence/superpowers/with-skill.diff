@@ -1,0 +1,96 @@
+diff --git a/app.py b/app.py
+index 1f0fa6b..61ac916 100644
+--- a/app.py
++++ b/app.py
+@@ -22,12 +22,23 @@ class Calculator:
+         return result
+ 
+     def divide(self, a, b):
+-        # BUG: no zero-division check
++        if b == 0:
++            return None
+         result = a / b
+         self.history.append(f"divide({a}, {b}) = {result}")
+         return result
+ 
+-    # NOTE: multiply() is missing - needs to be implemented with TDD
++    def modulus(self, a, b):
++        result = a % b
++        self.history.append(f"modulus({a}, {b}) = {result}")
++        return result
++
++    def average(self, lst):
++        if not lst:
++            return None
++        result = sum(lst) / len(lst)
++        self.history.append(f"average({lst}) = {result}")
++        return result
+ 
+     def search_user(self, username):
+         """SECURITY: SQL injection vulnerability."""
+diff --git a/test_app.py b/test_app.py
+index 73630b9..c12c52b 100644
+--- a/test_app.py
++++ b/test_app.py
+@@ -26,8 +26,56 @@ def test2():
+     assert calc.divide(-6, 3) == -2
+ 
+ 
+-# MISSING: test_multiply
+-# MISSING: test_divide_by_zero
+-# MISSING: test_divide_float
+-# MISSING: test_search_user_sql_injection
+-# MISSING: test_calculate_expression_safety
++def test_modulus_basic():
++    """modulus should return remainder of a divided by b."""
++    calc = Calculator()
++    assert calc.modulus(10, 3) == 1
++    assert calc.modulus(7, 2) == 1
++
++
++def test_modulus_zero_dividend():
++    """modulus with zero dividend should return 0."""
++    calc = Calculator()
++    assert calc.modulus(0, 5) == 0
++
++
++def test_modulus_exact_division():
++    """modulus with exact division should return 0."""
++    calc = Calculator()
++    assert calc.modulus(5, 5) == 0
++
++
++def test_modulus_negative():
++    """modulus with negative numbers."""
++    calc = Calculator()
++    assert calc.modulus(-10, 3) == 2
++
++
++def test_divide_by_zero_returns_none():
++    """divide by zero should return None gracefully, not crash."""
++    calc = Calculator()
++    assert calc.divide(10, 0) is None
++
++
++def test_average_basic():
++    """average of a normal list returns the mean."""
++    calc = Calculator()
++    assert calc.average([1.0, 2.0, 3.0]) == 2.0
++
++
++def test_average_single_element():
++    """average of single-element list returns that element."""
++    calc = Calculator()
++    assert calc.average([5.0]) == 5.0
++
++
++def test_average_empty_list():
++    """average of empty list returns None."""
++    calc = Calculator()
++    assert calc.average([]) is None
++
++
++def test_average_floats():
++    """average with float values."""
++    calc = Calculator()
++    assert calc.average([1.5, 2.5]) == 2.0

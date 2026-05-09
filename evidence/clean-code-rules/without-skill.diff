@@ -1,0 +1,142 @@
+diff --git a/utils.py b/utils.py
+index 42efa2b..7fb7c59 100644
+--- a/utils.py
++++ b/utils.py
+@@ -1,67 +1,94 @@
+-"""Utility functions - long functions, magic numbers, poor naming."""
++"""Utility functions for numeric data processing."""
+ 
+ import time
+ 
+ 
+-def do_stuff(input_data, mode, x):
+-    """This function does too many things and is poorly named."""
+-    tmp = []
+-    result = 0
+-    count = 0
++# --- Constants ---
++SCALE_FACTOR = 0.75
++SECONDS_PER_DAY = 86400
++DECAY_RATE = 0.01
++PI_APPROXIMATION = 3.14159
++SCALE_DECIMAL_PLACES = 2
++DEFAULT_DECIMAL_PLACES = 4
++
++BONUS_THRESHOLD = 100
++BONUS_MULTIPLIER = 1.5
++
++
++def process_numeric_data(raw_data, mode, threshold):
++    """Filter, transform, and compute stats on numeric data.
++
++    Filters valid positive numbers from raw_data (accepts int, float, and
++    numeric strings), then applies mode-specific transformations.
++    """
++    valid_values = _filter_positive_numbers(raw_data)
++
++    if mode == "threshold":
++        return _compute_threshold_average(valid_values, threshold)
++
++    _apply_mode_transform(valid_values, mode)
++    _apply_time_decay(valid_values)
+ 
+-    # Part 1: filter valid numbers
+-    for item in input_data:
++    final_result = sum(valid_values) / len(valid_values) if valid_values else 0
++    if mode == "scale":
++        return round(final_result, SCALE_DECIMAL_PLACES)
++    return round(final_result * PI_APPROXIMATION, DEFAULT_DECIMAL_PLACES)
++
++
++def _filter_positive_numbers(raw_data):
++    """Extract valid positive numbers from mixed-type input."""
++    result = []
++    for item in raw_data:
+         if isinstance(item, (int, float)):
+             if item > 0:
+-                tmp.append(item)
++                result.append(item)
+         elif isinstance(item, str):
+             try:
+                 val = float(item)
+                 if val > 0:
+-                    tmp.append(val)
++                    result.append(val)
+             except ValueError:
+                 pass
++    return result
+ 
+-    # Part 2: transform based on mode
++
++def _apply_mode_transform(values, mode):
++    """Apply mode-specific transformation to values in-place."""
+     if mode == "scale":
+-        for i in range(len(tmp)):
+-            tmp[i] = tmp[i] * 0.75  # MAGIC NUMBER
++        for i in range(len(values)):
++            values[i] = values[i] * SCALE_FACTOR
+     elif mode == "normalize":
+-        max_val = max(tmp)
+-        for i in range(len(tmp)):
+-            tmp[i] = tmp[i] / max_val
+-    elif mode == "threshold":
+-        for i in range(len(tmp)):
+-            if tmp[i] > x:
+-                result += tmp[i]
+-                count += 1
+-        return result / count if count > 0 else 0
++        max_val = max(values)
++        for i in range(len(values)):
++            values[i] = values[i] / max_val
+ 
+-    # Part 3: compute stats (duplicated logic from threshold mode)
+-    for val in tmp:
+-        result += val
+-        count += 1
+ 
+-    avg = result / count if count > 0 else 0
++def _compute_threshold_average(values, threshold):
++    """Compute average of values exceeding the threshold."""
++    total = 0
++    count = 0
++    for val in values:
++        if val > threshold:
++            total += val
++            count += 1
++    return total / count if count > 0 else 0
+ 
+-    # Part 4: apply time-based decay (duplicated transform pattern)
+-    current_time = time.time()
+-    decay_factor = current_time / 86400  # MAGIC NUMBER: seconds per day
+ 
+-    for i in range(len(tmp)):
+-        tmp[i] = tmp[i] * (1 - decay_factor * 0.01)
++def _apply_time_decay(values):
++    """Apply time-based decay to values in-place."""
++    decay_factor = time.time() / SECONDS_PER_DAY
++    for i in range(len(values)):
++        values[i] = values[i] * (1 - decay_factor * DECAY_RATE)
+ 
+-    final_result = sum(tmp) / len(tmp) if len(tmp) > 0 else 0
+ 
+-    # Part 5: format output (duplicated magic number)
+-    if mode == "scale":
+-        return round(final_result, 2)
+-    return round(final_result * 3.14159, 4)  # MAGIC NUMBER: pi approximation
++def compute_bonus_adjusted(a, b, c):
++    """Apply bonus multiplier if sum exceeds threshold, then subtract offset."""
++    total = a + b
++    if total > BONUS_THRESHOLD:
++        total = total * BONUS_MULTIPLIER
++    return total - c
+ 
+ 
+-def old_func(a, b, c):
+-    """Legacy function with terrible naming."""
+-    x = a + b
+-    if x > 100:  # MAGIC NUMBER
+-        x = x * 1.5  # MAGIC NUMBER
+-    return x - c
++# Backward-compatible aliases
++do_stuff = process_numeric_data
++old_func = compute_bonus_adjusted
